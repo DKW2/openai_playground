@@ -7,26 +7,47 @@ openai.api_key_path = "/home/cupsponge/projects/keys/openai.key"
 
 MODEL = "gpt-3.5-turbo"
 
-print( "Chat with Chat GPT~" )
+class ChatBot:
+    def __init__( self, context="You are a helpful assistant." ):
+        self.context = context
+        self.messages = [{"role": "system", "content": context}]
 
-messages = [{"role": "system", "content": "You are a helpful assistant."}]
-userMsg = input( "What would you like to ask chatGPT? Type 'Reset' to reset the conversation, or 'Quit' to quit the program.\n" )
-
-while( userMsg != "Quit" ):
-    if( userMsg == "Reset" ):
-        messages = [{"role": "system", "content": "You are a helpful assistant."}]
-    else:
-        messages.append( {"role": "user", "content": userMsg } )
+    def QueryChatBot( self, userMsg ):
+        self.messages.append( {"role": "user", "content": userMsg } )
         response = openai.ChatCompletion.create(
             model=MODEL,
-            messages=messages
+            messages=self.messages
         )
 
         aiMsg = response["choices"][0]["message"]
-        print( "\n" + aiMsg["content"] )
-        print( "(Total tokens: " + str( response["usage"]["total_tokens"] ) + ")" )
-        messages.append( aiMsg )
+        self.messages.append( aiMsg )
+        return response
 
-    userMsg = input( "\nWhat would you like to ask chatGPT? Type 'Reset' to reset the conversation, or 'Quit' to quit the program.\n" )
+    def ResetChat( self ):
+        self.messages = [{"role": "system", "content": self.context}]
+
+    def SetPrompt( self, prompt ):
+        self.prompt = prompt
+
+    def SetContext( self, context ):
+        self.context = context
+
+
+    
+print( "Chat with Chat GPT~" )
+chatBot = ChatBot( "You are a pirate" )
+promptMsg = "What would you like to ask chatGPT? Type 'Reset' to reset the conversation, or 'Quit' to quit the program.\n"
+userMsg = input( promptMsg )
+
+while( userMsg != "Quit" ):
+    if( userMsg == "Reset" ):
+        chatBot.ResetChat()
+    else:
+        response = chatBot.QueryChatBot( userMsg )
+        aiMsg = response["choices"][0]["message"]
+        print( "\n" + aiMsg["content"] )
+        print( "(Total tokens: " + str( response["usage"]["total_tokens"] ) + ")\n" )
+
+    userMsg = input( promptMsg )
 
 print( "Goodbye!" )
